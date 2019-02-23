@@ -1,0 +1,23 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    run: mydep
+  name: mydep
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      run: mydep
+  template:
+    metadata:
+      labels:
+        run: mydep
+    spec:
+      containers:
+      - name: mydep
+        image: busybox
+        command:
+        - "sleep"
+        - "2d"
+      schedulerName: my-scheduler
