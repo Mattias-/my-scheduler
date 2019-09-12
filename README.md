@@ -1,1 +1,2 @@
-It's a kubernetes scheduler in a few lines of bash. Run it in production.
+It's a kubernetes scheduler in a few lines of bash.
+Run it in production.
