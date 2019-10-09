@@ -1,22 +1,41 @@
 #!/bin/bash
 set -euo pipefail
 
+SCHEDULER_NAME="my-scheduler"
+
+main() {
+    while true; do
+        get_pending_pods | while read -r pod; do
+            schedule_pod "$pod"
+        done
+        sleep 10
+    done
+}
+
 get_pending_pods() {
-    scheduler=$1
-    kubectl get pods -ojson \
-        --field-selector="status.phase=Pending,spec.schedulerName=$scheduler" |
+    kubectl get pods --output=json \
+        --field-selector="status.phase=Pending,spec.schedulerName=$SCHEDULER_NAME" |
         jq --compact-output '.items[]'
 }
 
+schedule_pod() {
+    pod=$1
+    node="$(get_node "$pod")"
+    bind_pod "$node" "$pod"
+}
+
 get_node() {
+    pod=$1
     # TODO Choose node with care
-    kubectl get node -ojson | jq -r '.items | first | .metadata.name'
+    kubectl get nodes --output=json |
+        jq -r '.items[0].metadata.name'
 }
 
 bind_pod() {
     node=$1
-    namespace=$2
-    name=$3
+    pod=$2
+    namespace=$(jq -r '.metadata.namespace' <<<"$pod")
+    name=$(jq -r '.metadata.name' <<<"$pod")
     kubectl create \
         --raw "/api/v1/namespaces/${namespace}/pods/${name}/binding" -f - <<EOF
 {
@@ -32,23 +51,6 @@ bind_pod() {
   }
 }
 EOF
-}
-
-schedule_pod() {
-    pod=$1
-    namespace=$(jq -r '.metadata.namespace' <<<"$pod")
-    name=$(jq -r '.metadata.name' <<<"$pod")
-    node="$(get_node)"
-    bind_pod "$node" "$namespace" "$pod"
-}
-
-main() {
-    while true; do
-        get_pending_pods "my-scheduler" | while read -r pod; do
-            schedule_pod "$pod"
-        done
-        sleep 10
-    done
 }
 
 main
