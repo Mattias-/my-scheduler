@@ -19,25 +19,31 @@ get_pending_pods() {
 }
 
 schedule_pod() {
-    pod=$1
+    local pod=$1
+    local node
     node="$(get_node "$pod")"
     bind_pod "$node" "$pod"
+    echo "Scheduled: $name on $node"
 }
 
 get_node() {
-    pod=$1
+    local pod=$1
     # TODO Choose node with care
     kubectl get nodes --output=json |
-        jq -r '.items[0].metadata.name'
+        jq -r '.items[].metadata.name' |
+        head -n1
 }
 
 bind_pod() {
-    node=$1
-    pod=$2
+    local node=$1
+    local pod=$2
+    local namespace
     namespace=$(jq -r '.metadata.namespace' <<<"$pod")
+    local name
     name=$(jq -r '.metadata.name' <<<"$pod")
     kubectl create \
-        --raw "/api/v1/namespaces/${namespace}/pods/${name}/binding" -f - <<EOF
+        --raw "/api/v1/namespaces/${namespace}/pods/${name}/binding" \
+        -f - >/dev/null <<EOF
 {
   "apiVersion": "v1",
   "kind": "Binding",
