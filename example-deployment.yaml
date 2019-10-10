@@ -15,9 +15,16 @@ spec:
         run: mydep
     spec:
       containers:
-      - name: mydep
+      - command:
+        - sleep
+        - 1000s
         image: busybox
-        command:
-        - "sleep"
-        - "2d"
+        name: mydep
+        resources:
+          limits:
+            cpu: 500m
+            memory: 500Mi
+          requests:
+            cpu: 500m
+            memory: 500Mi
       schedulerName: my-scheduler
