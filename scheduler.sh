@@ -20,10 +20,12 @@ get_pending_pods() {
 
 schedule_pod() {
     local pod=$1
+    local pod_name
+    pod_name=$(jq -r '.metadata.name' <<<"$pod")
     local node
     node="$(get_node "$pod")"
     bind_pod "$node" "$pod"
-    echo "Scheduled: $name on $node"
+    echo "Scheduled: $pod_name on $node"
 }
 
 get_node() {
