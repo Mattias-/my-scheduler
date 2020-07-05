@@ -22,9 +22,9 @@ spec:
         name: mydep
         resources:
           limits:
-            cpu: 500m
-            memory: 500Mi
+            cpu: 50m
+            memory: 20Mi
           requests:
-            cpu: 500m
-            memory: 500Mi
+            cpu: 50m
+            memory: 20Mi
       schedulerName: my-scheduler

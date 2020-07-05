@@ -2,13 +2,15 @@
 set -euo pipefail
 
 SCHEDULER_NAME="my-scheduler"
+SLEEP_INTERVAL="2"
 
 main() {
+    echo "Scheduling pods as $SCHEDULER_NAME every $SLEEP_INTERVAL seconds."
     while true; do
         get_pending_pods | while read -r pod; do
             schedule_pod "$pod"
         done
-        sleep 10
+        sleep "$SLEEP_INTERVAL"
     done
 }
 
@@ -22,6 +24,10 @@ schedule_pod() {
     local pod=$1
     local pod_name
     pod_name=$(jq -r '.metadata.name' <<<"$pod")
+    # Don't schedule if it has a node assigned.
+    if [ "$(jq -r '.spec.nodeName == null' <<<"$pod")" == "false" ]; then
+        return
+    fi
     local node
     node="$(get_node "$pod")"
     bind_pod "$node" "$pod"
